@@ -1,0 +1,94 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+  City ||--o{ Homestead : has
+  City ||--o{ Survivor : has
+  City ||--o{ FoodShelf : has
+  City ||--o{ WaterSpring : has
+  City ||--o{ GasStation : has
+  City ||--o{ MedicalFacility : has
+  Homestead ||--o{ Survivor : shelters
+  Homestead ||--o{ Inventory : holds
+  Homestead ||--o{ FoodShelf : stores_food
+  Homestead ||--o{ WaterSpring : nearby
+  Homestead ||--o{ MedicalFacility : hosts
+  Inventory ||--o{ Item : contains
+  Position ||--o{ Survivor : assigns
+  Homestead ||--o{ Allies : has_ally
+  Homestead ||--o{ Adversaries : has_enemy
+  Survivor {
+    int survivor_id PK
+    int homestead_id FK
+    int city_id FK
+    int position_id FK
+    string name
+    int age
+  }
+  Position {
+    int position_id PK
+    string name
+    string description
+  }
+  City {
+    int city_id PK
+    string name
+    string region
+  }
+  Homestead {
+    int homestead_id PK
+    int city_id FK
+    string name
+    int capacity
+    string location_description
+  }
+  FoodShelf {
+    int foodshelf_id PK
+    int homestead_id FK
+    int city_id FK
+    string location_description
+  }
+  WaterSpring {
+    int water_spring_id PK
+    int city_id FK
+    int homestead_id FK
+    string water_quality
+  }
+  GasStation {
+    int gas_station_id PK
+    int city_id FK
+    string location_description
+    bool fuel_available
+  }
+  MedicalFacility {
+    int medical_facility_id PK
+    int city_id FK
+    int homestead_id FK
+    string facility_type
+  }
+  Inventory {
+    int inventory_id PK
+    int homestead_id FK
+    string name
+    string description
+  }
+  Item {
+    int item_id PK
+    int inventory_id FK
+    string name
+    string item_type
+    int quantity
+  }
+  Allies {
+    int ally_id PK
+    int homestead_id_1 FK
+    int homestead_id_2 FK
+    date alliance_start_date
+  }
+  Adversaries {
+    int adversary_id PK
+    int homestead_id_1 FK
+    int homestead_id_2 FK
+    date conflict_start_date
+  }
