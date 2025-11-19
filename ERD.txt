@@ -3,21 +3,28 @@ config:
   layout: elk
 ---
 erDiagram
-  City ||--o{ Homestead : has
-  City ||--o{ Survivor : has
-  City ||--o{ FoodShelf : has
-  City ||--o{ WaterSpring : has
-  City ||--o{ GasStation : has
-  City ||--o{ MedicalFacility : has
-  Homestead ||--o{ Survivor : shelters
-  Homestead ||--o{ Inventory : holds
-  Homestead ||--o{ FoodShelf : stores_food
-  Homestead ||--o{ WaterSpring : nearby
-  Homestead ||--o{ MedicalFacility : hosts
-  Inventory ||--o{ Item : contains
-  Position ||--o{ Survivor : assigns
-  Homestead ||--o{ Allies : has_ally
-  Homestead ||--o{ Adversaries : has_enemy
+  City ||--o{ Homestead : city_id
+  City ||--o{ Survivor : city_id
+  City ||--o{ FoodShelf : city_id
+  City ||--o{ WaterSpring : city_id
+  City ||--o{ City_Currency : city_id
+  Currency ||--o{ City_Currency : currency_id
+  Homestead ||--o{ Survivor : homestead_id
+  Homestead ||--o{ Inventory : homestead_id
+  Homestead ||--o{ Homestead_FoodShelf : homestead_id
+  FoodShelf ||--o{ Homestead_FoodShelf : foodshelf_id
+  Homestead ||--o{ MedicalFacility : homestead_id
+  Homestead ||--o{ GasStation : homestead_id
+  Inventory ||--o{ Item : inventory_id
+  Position ||--o{ Position_Survivor : position_id
+  Survivor ||--o{ Position_Survivor : survivor_id
+  Homestead ||--o{ Allies : homestead_id
+  Homestead ||--o{ Adversaries : homestead_id
+  Homestead ||--o{ Homestead_WaterSpring : homestead_id
+  WaterSpring ||--o{ Homestead_WaterSpring : waterspring_id
+  MedicalFacility ||--o{ MedicalFacility_Position : medical_facility_id
+  Position ||--o{ MedicalFacility_Position :position_id
+
   Survivor {
     int survivor_id PK
     int homestead_id FK
@@ -45,7 +52,6 @@ erDiagram
   }
   FoodShelf {
     int foodshelf_id PK
-    int homestead_id FK
     int city_id FK
     string location_description
   }
@@ -57,13 +63,11 @@ erDiagram
   }
   GasStation {
     int gas_station_id PK
-    int city_id FK
     string location_description
     bool fuel_available
   }
   MedicalFacility {
     int medical_facility_id PK
-    int city_id FK
     int homestead_id FK
     string facility_type
   }
@@ -91,4 +95,30 @@ erDiagram
     int homestead_id_1 FK
     int homestead_id_2 FK
     date conflict_start_date
+  }
+  MedicalFacility_Position {
+    int position_id FK
+    int medical_facility_id FK
+  }
+  Homestead_WaterSpring {
+    int homestead_id FK
+    int water_spring_id FK
+  }
+  Homestead_FoodShelf {
+    int homestead_id FK
+    int foodshelf_id FK
+  }
+  City_Currency {
+    int city_id FK
+    int currency_id FK
+  }
+  Currency {
+    int currency_id PK
+    string name
+    int gold_exchange_rate
+    string describtion
+  }
+  Position_Survivor {
+    int position_id FK
+    int survivor_id FK
   }
