@@ -3,92 +3,152 @@ config:
   layout: elk
 ---
 erDiagram
-  City ||--o{ Homestead : has
   City ||--o{ Survivor : has
+  City ||--o{ Homestead : has
   City ||--o{ FoodShelf : has
-  City ||--o{ WaterSpring : has
+  City ||--o{ WaterWell : has
   City ||--o{ GasStation : has
   City ||--o{ MedicalFacility : has
+  City ||--o{ Research_Team : hosts
+  City ||--o{ Resource_Site : contains
+
   Homestead ||--o{ Survivor : shelters
   Homestead ||--o{ Inventory : holds
   Homestead ||--o{ FoodShelf : stores_food
-  Homestead ||--o{ WaterSpring : nearby
+  Homestead ||--o{ WaterWell : nearby
   Homestead ||--o{ MedicalFacility : hosts
+  Homestead ||--o{ Research_Team : supports
+
   Inventory ||--o{ Item : contains
+
+  Survivor ||--o{ Disease : infected_with
+
   Position ||--o{ Survivor : assigns
-  Homestead ||--o{ Allies : has_ally
-  Homestead ||--o{ Adversaries : has_enemy
+  Role ||--o{ Survivor : fulfills
+  Rank ||--o{ Survivor : classified_as
+
   Survivor {
     int survivor_id PK
+    string survivor_codename
     int homestead_id FK
+    bool is_original_homestead
     int city_id FK
-    int position_id FK
-    string name
+    int role_id FK
+    int rank_id FK
+    int skill_level
     int age
   }
+
+  Disease {
+    int disease_id PK
+    string disease_description
+    int survivor_id FK
+    bool is_quarantined
+    int days_since_infection
+    bool is_infectious
+  }
+
+  Role {
+    int role_id PK
+    string role_name
+    string role_importance
+    bool field_work
+  }
+
+  Rank {
+    int rank_id PK
+    string rank_name
+    string rank_description
+    string rank_importance
+  }
+
   Position {
     int position_id PK
     string name
     string description
+    string importance
   }
+
   City {
     int city_id PK
-    string name
+    string city_name
     string region
+    int total_city_population
   }
+
+  Research_Team {
+    int research_team_id PK
+    int survivor_id
+    int city_id FK
+    int homestead_id FK
+    int researcher_amount
+    bool possible_cure
+  }
+
   Homestead {
     int homestead_id PK
     int city_id FK
-    string name
+    string homestead_name
     int capacity
     string location_description
+    int homestead_population
   }
+
   FoodShelf {
     int foodshelf_id PK
     int homestead_id FK
     int city_id FK
     string location_description
+    bool is_scavenged
   }
-  WaterSpring {
-    int water_spring_id PK
+
+  WaterWell {
+    int water_well_id PK
     int city_id FK
     int homestead_id FK
-    string water_quality
+    string quality
+    bool is_accessible
+    int amount
   }
+
   GasStation {
     int gas_station_id PK
     int city_id FK
     string location_description
-    bool fuel_available
+    bool available
+    int amount_available
+    date delivery_date
   }
+
   MedicalFacility {
     int medical_facility_id PK
     int city_id FK
     int homestead_id FK
-    string facility_type
+    int capacity
+    int supply_count
   }
+
   Inventory {
     int inventory_id PK
     int homestead_id FK
-    string name
-    string description
+    string inventory_name
+    date restock_date
   }
+
   Item {
     int item_id PK
     int inventory_id FK
-    string name
+    string item_name
     string item_type
     int quantity
+    string usefulness_level
+    string primary_resource_component
   }
-  Allies {
-    int ally_id PK
-    int homestead_id_1 FK
-    int homestead_id_2 FK
-    date alliance_start_date
-  }
-  Adversaries {
-    int adversary_id PK
-    int homestead_id_1 FK
-    int homestead_id_2 FK
-    date conflict_start_date
+
+  Resource_Site {
+    int resource_site_id PK
+    string available_resource
+    string resource_type
+    bool near_homesteads
+    int city_id FK
   }
