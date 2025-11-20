@@ -1,135 +1,152 @@
+---
+config:
+  layout: elk
+---
 erDiagram
-    direction LR
-    Regions {
-        Char region_id PK
-        Varchar region_name
-    }
-    Survivors {
-        Char survivor_id PK
-        Varchar survivor_name
-        bool deceased
-        bool infected
-        date birthdate
-    }
-    Jobs {
-        Char job_id PK
-        Varchar job_name
-        VarChar description
-    }
-    Skills{
-        Char skill_id PK
-        Varchar skill_name
-    }
-    Safehouses {
-        Char safehouse_id PK
-        Varchar safehouse_name
-        int capacity
-        bool infected
-        char inventory_id FK
-        char faction_id FK
-    }
-    Factions {
-        Char faction_id PK
-        Varchar faction_name
-        varchar faction_type
-        char currency_id FK
-    }
-    Inventory {
-        Char inventory_id PK
-        
-    }
-    Item_Category {
-        Char item_category_id PK
-        Varchar item_category_name
-    }
-    Currency {
-        Char currency_id PK
-        Varchar currency_name
-    }
-    Events {
-        Char event_id PK
-        Varchar event_name
-        VarChar description
-        date event_date
-    }
-    Items {
-        char item_id PK
-        VarChar item_name
-        decimal weight
-        varchar description
-        Char category_id FK
-    }
-    Resources {
-        char resource_id PK
-        VarChar resource_name
-        varchar resource_type
-    }
+  City ||--o{ Shelter : "has"
+  City ||--o{ ResourceSite : "contains"
+
+  PowerSource ||--o{ Shelter_Power : "powers"
+  WaterSource ||--o{ Shelter_Water : "supplies"
+  Shelter_Power ||--|| Shelter : "powers"
+  Shelter_Water ||--|| Shelter : "supplies"
+
+  Shelter ||--o{ Survivor : "houses"
+  Shelter ||--o{ Inventory : "owns"
+
+  Survivor ||--o{ DiseaseCase : "has case"
+  Survivor ||--o{ SurvivorSkill : "has skill"
+  Survivor ||--|| Status : "has status"
+  Survivor ||--|| Survivor_Encounter : "involved in"
+  Survivor_Encounter ||--|| Encounter : "involves"
+  Skill ||--o{ SurvivorSkill : "used by"
+
+  Inventory ||--o{ Item : "holds"
+
+  Faction ||--o{ Faction_Encounter : "involved"
+  Faction_Encounter ||--|| Encounter : "involves"
+  Faction ||--|| Faction_Relations : "Relates"
+  Faction_Relations ||--|| Faction : "Relates"
+
+  City {
+    int city_id PK
+    string name
+    string region
+  }
+
+  PowerSource {
+    int power_source_id PK
+    string name
+  }
+
+  WaterSource {
+    int water_source_id PK
+    string name
+  }
+
+  Shelter {
+    int shelter_id PK
+    int city_id FK
+    int power_source_id FK
+    int water_source_id FK
+    string name
+    int capacity
+  }
+
+  Survivor {
+    int survivor_id PK
+    int shelter_id FK
+    string first_name
+    string last_name
+    date birth_date
+    int status_id
+  }
+
+  Skill {
+    int skill_id PK
+    string name
+    string description
+  }
+
+  SurvivorSkill {
+    int survivor_id FK
+    int skill_id FK
+    int proficiency_level
+  }
+
+  DiseaseCase {
+    int disease_case_id PK
+    int survivor_id FK
+    date diagnosis_date
+    date cure_date
+    string status
+  }
 
 
-    Region_Events {
-        Char region_id PK
-        Char event_id PK
-    }
-    Survivor_Events {
-        Char survivor_id PK
-        Char event_id PK
-    }
-    Faction_Events {
-        Char faction_id PK
-        Char event_id PK
-    }
-    Survivor_Skills {
-        Char survivor_id
-        Char skill_id
-        int skill_level
-    }
-    Region_Currency {
-        char region_id
-        char currency_id
-    }
-    Inventory_Item {
-        char inventory_id
-        char item_id
-        int quantity
-        decimal value
-    }
-    Region_Resource {
-        char region_id
-        char resource_id
-    }
-    Item_Resource {
-        char item_id
-        char resource_id
-    }
-    Safehouse_Resource {
-        char safehouse_id
-        char resource_id
-    }
+  Item {
+    int item_id PK
+    int inventory_id FK
+    string item_name
+    string category
+    bool is_currency
+    decimal unit_value
+  }
 
-    Events ||--|| Faction_Events : ""
-    Events ||--|| Survivor_Events : ""
-    Regions ||--|| Region_Events : ""
-    Regions ||--|| Region_Resource : ""
-    Region_Events ||--|| Events : ""
-    Faction_Events ||--|| Factions : ""
-    Survivor_Events ||--|| Survivors : ""
-    Survivor_Skills ||--|| Survivors : ""
-    Skills ||--|| Survivor_Skills : ""
-    Safehouses ||--|| Survivors : ""
-    Regions ||--|| Region_Currency : ""
-    Region_Currency ||--|| Currency : ""
-    Factions ||--|| Currency : ""
-    Factions ||--|| Regions : ""
-    Regions ||--|| Safehouses : ""
-    Survivors ||--|| Jobs : ""
-    Factions ||--|| Safehouses : ""
-    Inventory ||--|| Inventory_Item : ""
-    Safehouses ||--|| Inventory : ""   
-    Inventory_Item ||--|| Items : ""
-    Items ||--|| Item_Category : ""
-    Region_Resource ||--|| Resources : ""
-    Resources ||--|| Item_Resource : ""
-    Item_Resource ||--|| Items : ""
-    Resources ||--|| Safehouse_Resource : ""
-    Safehouse_Resource ||--|| Safehouses : ""
-    
+  ResourceSite {
+    int resource_site_id PK
+    int city_id FK
+    string resource_type
+    string site_name
+    string description
+    bool is_operational
+  }
+
+  Faction {
+    int faction_id PK
+    string name
+    string faction_type
+    string attitude
+  }
+
+  Encounter {
+    int encounter_id PK
+    int faction_id FK
+    date encounter_date
+    string encounter_type
+    string attitude
+    string description
+  }
+
+  Faction_Relations {
+    int faction_id_1 PK
+    int faction_id_2 PK
+    string attitude
+  }
+
+  Status {
+    int status_id
+    string name
+  }
+
+
+ Inventory {
+    int item_id PK
+    int shelter_id PK
+    int quantity
+  } 
+  Shelter_Power {
+    int shelter_id PK
+    int power_source_id PK
+  }
+  Shelter_Water {
+    int shelter_id PK
+    int water_source_id PK
+  }
+  Survivor_Encounter {
+    int encounter_id PK
+    int survivor_id PK
+  }
+  Faction_Encounter {
+    int encounter_id PK
+    int faction_id PK
+  }
