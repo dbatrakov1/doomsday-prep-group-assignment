@@ -108,7 +108,6 @@ erDiagram
 
   Encounter {
     int encounter_id PK
-    int faction_id FK
     date encounter_date
     string encounter_type
     string attitude
