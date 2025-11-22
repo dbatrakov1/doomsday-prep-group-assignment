@@ -30,8 +30,8 @@ erDiagram
 
   City {
     int city_id PK
-    string name
-    string region
+    string city_name
+    string city_region
   }
 
   PowerSource {
@@ -49,8 +49,8 @@ erDiagram
     int city_id FK
     int power_source_id FK
     int water_source_id FK
-    string name
-    int capacity
+    string shelter_name
+    int shelter_capacity
   }
 
   Survivor {
@@ -96,9 +96,9 @@ erDiagram
     int resource_site_id PK
     int city_id FK
     string resource_type
-    string site_name
-    string description
-    bool is_operational
+    string resource_site_name
+    string resource_site_description
+    bool resource_site_operational
   }
 
   Faction {
