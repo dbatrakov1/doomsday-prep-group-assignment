@@ -8,8 +8,8 @@ erDiagram
 
   PowerSource ||--o{ Shelter_Power : "powers"
   WaterSource ||--o{ Shelter_Water : "supplies"
-  Shelter_Power ||--|| Shelter : "powers"
-  Shelter_Water ||--|| Shelter : "supplies"
+  Shelter_Power }o--|| Shelter : "powers"
+  Shelter_Water }o--|| Shelter : "supplies"
 
   Shelter ||--o{ Survivor : "houses"
   Shelter ||--o{ Inventory : "owns"
@@ -17,16 +17,16 @@ erDiagram
   Survivor ||--o{ DiseaseCase : "has case"
   Survivor ||--o{ SurvivorSkill : "has skill"
   Survivor ||--|| Status : "has status"
-  Survivor ||--|| Survivor_Encounter : "involved in"
-  Survivor_Encounter ||--|| Encounter : "involves"
-  Skill ||--o{ SurvivorSkill : "used by"
+  Survivor ||--o{ Survivor_Encounter : "involved in"
+  Survivor_Encounter }o--|| Encounter : "involves"
+  Skill }o--|| SurvivorSkill : "used by"
 
   Inventory ||--o{ Item : "holds"
 
   Faction ||--o{ Faction_Encounter : "involved"
-  Faction_Encounter ||--|| Encounter : "involves"
-  Faction ||--|| Faction_Relations : "Relates"
-  Faction_Relations ||--|| Faction : "Relates"
+  Faction_Encounter }o--|| Encounter : "involves"
+  Faction ||--o{ Faction_Relations : "Relates"
+  Faction_Relations }o--|| Faction : "Relates"
 
   City {
     int city_id PK
@@ -108,7 +108,6 @@ erDiagram
 
   Encounter {
     int encounter_id PK
-    int faction_id FK
     date encounter_date
     string encounter_type
     string attitude
