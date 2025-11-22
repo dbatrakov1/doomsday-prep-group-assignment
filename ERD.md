@@ -31,26 +31,24 @@ erDiagram
   City {
     int city_id PK
     string city_name
-    string city_region
+    string region
   }
 
   PowerSource {
     int power_source_id PK
-    string name
+    string power_source_name
   }
 
   WaterSource {
     int water_source_id PK
-    string name
+    string water_source_name
   }
 
   Shelter {
     int shelter_id PK
     int city_id FK
-    int power_source_id FK
-    int water_source_id FK
     string shelter_name
-    int shelter_capacity
+    int capacity
   }
 
   Survivor {
@@ -64,7 +62,7 @@ erDiagram
 
   Skill {
     int skill_id PK
-    string name
+    string skill_name
     string description
   }
 
@@ -103,14 +101,13 @@ erDiagram
 
   Faction {
     int faction_id PK
-    string name
+    string faction_name
     string faction_type
     string attitude
   }
 
   Encounter {
     int encounter_id PK
-    int faction_id FK
     date encounter_date
     string encounter_type
     string attitude
@@ -125,7 +122,7 @@ erDiagram
 
   Status {
     int status_id
-    string name
+    string status_name
   }
 
 
