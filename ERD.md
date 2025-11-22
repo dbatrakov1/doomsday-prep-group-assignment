@@ -16,7 +16,9 @@ erDiagram
 
   Survivor ||--o{ DiseaseCase : "has case"
   Survivor ||--o{ SurvivorSkill : "has skill"
+
   Survivor }o--|| Status : "has status"
+
   Survivor ||--o{ Survivor_Encounter : "involved in"
   Survivor_Encounter }o--|| Encounter : "involves"
   Skill }o--|| SurvivorSkill : "used by"
