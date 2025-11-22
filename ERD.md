@@ -89,7 +89,6 @@ erDiagram
 
   Item {
     int item_id PK
-    int inventory_id FK
     string item_name
     string category
     bool is_currency
