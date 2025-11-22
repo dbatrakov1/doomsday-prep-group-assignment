@@ -16,7 +16,7 @@ erDiagram
 
   Survivor ||--o{ DiseaseCase : "has case"
   Survivor ||--o{ SurvivorSkill : "has skill"
-  Survivor ||--|| Status : "has status"
+  Survivor }o--|| Status : "has status"
   Survivor ||--o{ Survivor_Encounter : "involved in"
   Survivor_Encounter }o--|| Encounter : "involves"
   Skill }o--|| SurvivorSkill : "used by"
@@ -31,17 +31,22 @@ erDiagram
   City {
     int city_id PK
     string city_name
-    string region
+    string state
   }
 
   PowerSource {
     int power_source_id PK
     string power_source_name
+    string power_source_description
+    bool is_active
+    bool transportable
   }
 
   WaterSource {
     int water_source_id PK
     string water_source_name
+    string water_source_description
+    string water_quality
   }
 
   Shelter {
@@ -63,7 +68,7 @@ erDiagram
   Skill {
     int skill_id PK
     string skill_name
-    string description
+    string skill_description
   }
 
   SurvivorSkill {
@@ -77,7 +82,6 @@ erDiagram
     int survivor_id FK
     date diagnosis_date
     date cure_date
-    string status
   }
 
 
@@ -94,8 +98,8 @@ erDiagram
     int resource_site_id PK
     int city_id FK
     string resource_type
-    string site_name
-    string description
+    string resource_name
+    string resource_description
     bool is_operational
   }
 
@@ -103,21 +107,21 @@ erDiagram
     int faction_id PK
     string faction_name
     string faction_type
-    string attitude
+    string faction_attitude
   }
 
   Encounter {
     int encounter_id PK
     date encounter_date
     string encounter_type
-    string attitude
-    string description
+    string encounter_vibe
+    string encounter_description
   }
 
   Faction_Relations {
     int faction_id_1 PK
     int faction_id_2 PK
-    string attitude
+    string related_attitude
   }
 
   Status {
