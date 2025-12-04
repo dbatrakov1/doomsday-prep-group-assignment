@@ -4,6 +4,29 @@ GO
 USE Group2_DD
 GO
 
+--Drop junction tables first
+DROP TABLE IF EXISTS Faction_Encounter;
+DROP TABLE IF EXISTS Faction_Relations;
+DROP TABLE IF EXISTS Shelter_Power;
+DROP TABLE IF EXISTS Shelter_Water;
+DROP TABLE IF EXISTS Survivor_Encounter;
+DROP TABLE IF EXISTS Survivor_Skill;
+DROP TABLE IF EXISTS Inventory;
+
+--Drop regular tables starting with least referenced
+DROP TABLE IF EXISTS PowerSource;
+DROP TABLE IF EXISTS WaterSource;
+DROP TABLE IF EXISTS DiseaseCase;
+DROP TABLE IF EXISTS ResourceSite;
+DROP TABLE IF EXISTS Encounter;
+DROP TABLE IF EXISTS Item;
+DROP TABLE IF EXISTS Faction;
+DROP TABLE IF EXISTS Skill;
+DROP TABLE IF EXISTS Survivor;
+DROP TABLE IF EXISTS Status;
+DROP TABLE IF EXISTS Shelter;
+DROP TABLE IF EXISTS City;
+
 -- City
 CREATE TABLE City (
     city_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -11,7 +34,6 @@ CREATE TABLE City (
     state NVARCHAR(100)
 );
 
--- PowerSource
 CREATE TABLE PowerSource (
     power_source_id INT IDENTITY(1,1) PRIMARY KEY,
     power_source_name NVARCHAR(100) NOT NULL,
@@ -20,7 +42,6 @@ CREATE TABLE PowerSource (
     transportable BIT NOT NULL
 );
 
--- WaterSource
 CREATE TABLE WaterSource (
     water_source_id INT IDENTITY(1,1) PRIMARY KEY,
     water_source_name NVARCHAR(100) NOT NULL,
@@ -28,7 +49,6 @@ CREATE TABLE WaterSource (
     water_quality NVARCHAR(100) NOT NULL,
 );
 
--- Shelter
 CREATE TABLE Shelter (
     shelter_id INT IDENTITY(1,1) PRIMARY KEY,
     city_id INT NOT NULL,
@@ -37,13 +57,11 @@ CREATE TABLE Shelter (
     FOREIGN KEY (city_id) REFERENCES City(city_id)
 );
 
--- Status
 CREATE TABLE Status (
     status_id INT IDENTITY(1,1) PRIMARY KEY,
     status_name NVARCHAR(100) NOT NULL
 );
 
--- Survivor
 CREATE TABLE Survivor (
     survivor_id INT IDENTITY(1,1) PRIMARY KEY,
     shelter_id INT NOT NULL,
@@ -55,24 +73,12 @@ CREATE TABLE Survivor (
     FOREIGN KEY (status_id)  REFERENCES Status(status_id)
 );
 
--- Skill
 CREATE TABLE Skill (
     skill_id INT IDENTITY(1,1) PRIMARY KEY,
     skill_name NVARCHAR(100) NOT NULL,
     skill_description NVARCHAR(500)
 );
 
--- SurvivorSkill (junction)
-CREATE TABLE SurvivorSkill (
-    survivor_id INT NOT NULL,
-    skill_id INT NOT NULL,
-    proficiency_level INT,
-    PRIMARY KEY (survivor_id, skill_id),
-    FOREIGN KEY (survivor_id) REFERENCES Survivor(survivor_id),
-    FOREIGN KEY (skill_id)    REFERENCES Skill(skill_id)
-);
-
--- DiseaseCase
 CREATE TABLE DiseaseCase (
     disease_case_id INT IDENTITY(1,1) PRIMARY KEY,
     survivor_id INT NOT NULL,
@@ -80,7 +86,7 @@ CREATE TABLE DiseaseCase (
     cure_date DATE,
     FOREIGN KEY (survivor_id) REFERENCES Survivor(survivor_id)
 );
--- Item
+
 CREATE TABLE Item (
     item_id INT IDENTITY(1,1) PRIMARY KEY,
     item_name NVARCHAR(100) NOT NULL,
@@ -89,7 +95,6 @@ CREATE TABLE Item (
     unit_value DECIMAL(10,2)
 );
 
--- ResourceSite
 CREATE TABLE ResourceSite (
     resource_site_id INT IDENTITY(1,1) PRIMARY KEY,
     city_id INT NOT NULL,
@@ -100,7 +105,6 @@ CREATE TABLE ResourceSite (
     FOREIGN KEY (city_id) REFERENCES City(city_id)
 );
 
--- Faction
 CREATE TABLE Faction (
     faction_id INT IDENTITY(1,1) PRIMARY KEY,
     faction_name NVARCHAR(100) NOT NULL,
@@ -108,7 +112,6 @@ CREATE TABLE Faction (
     faction_attitude NVARCHAR(100)
 );
 
--- Encounter
 CREATE TABLE Encounter (
     encounter_id INT IDENTITY(1,1) PRIMARY KEY,
     encounter_date DATE NOT NULL,
@@ -117,7 +120,8 @@ CREATE TABLE Encounter (
     encounter_description NVARCHAR(500)
 );
 
--- Faction_Relations
+--[Junction Tables]
+
 CREATE TABLE Faction_Relations (
     faction_id_1 INT NOT NULL,
     faction_id_2 INT NOT NULL,
@@ -127,7 +131,6 @@ CREATE TABLE Faction_Relations (
     FOREIGN KEY (faction_id_2) REFERENCES Faction(faction_id)
 );
 
--- Inventory
 CREATE TABLE Inventory (
     item_id INT NOT NULL,
     shelter_id INT NOT NULL,
@@ -137,7 +140,6 @@ CREATE TABLE Inventory (
     FOREIGN KEY (shelter_id) REFERENCES Shelter(shelter_id)
 );
 
--- Shelter_Power
 CREATE TABLE Shelter_Power (
     shelter_id INT NOT NULL,
     power_source_id INT NOT NULL,
@@ -146,7 +148,6 @@ CREATE TABLE Shelter_Power (
     FOREIGN KEY (power_source_id) REFERENCES PowerSource(power_source_id)
 );
 
--- Shelter_Water (junction)
 CREATE TABLE Shelter_Water (
     shelter_id INT NOT NULL,
     water_source_id INT NOT NULL,
@@ -155,7 +156,6 @@ CREATE TABLE Shelter_Water (
     FOREIGN KEY (water_source_id) REFERENCES WaterSource(water_source_id)
 );
 
--- Survivor_Encounter
 CREATE TABLE Survivor_Encounter (
     encounter_id INT NOT NULL,
     survivor_id  INT NOT NULL,
@@ -164,11 +164,19 @@ CREATE TABLE Survivor_Encounter (
     FOREIGN KEY (survivor_id)  REFERENCES Survivor(survivor_id)
 );
 
--- Faction_Encounter
 CREATE TABLE Faction_Encounter (
     encounter_id INT NOT NULL,
     faction_id INT NOT NULL,
     PRIMARY KEY (encounter_id, faction_id),
     FOREIGN KEY (encounter_id) REFERENCES Encounter(encounter_id),
     FOREIGN KEY (faction_id)   REFERENCES Faction(faction_id)
+);
+
+CREATE TABLE Survivor_Skill (
+    survivor_id INT NOT NULL,
+    skill_id INT NOT NULL,
+    proficiency_level INT,
+    PRIMARY KEY (survivor_id, skill_id),
+    FOREIGN KEY (survivor_id) REFERENCES Survivor(survivor_id),
+    FOREIGN KEY (skill_id)    REFERENCES Skill(skill_id)
 );
