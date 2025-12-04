@@ -1,10 +1,10 @@
 --[TABLE Creation Statements Here]
-USE master
+/*USE master
 
 DROP DATABASE IF EXISTS Group2_DD;
 GO
 CREATE DATABASE Group2_DD;
-GO
+GO*/
 USE Group2_DD;
 GO
 
@@ -15,6 +15,8 @@ DROP TABLE IF EXISTS Shelter_Power;
 DROP TABLE IF EXISTS Inventory;
 DROP TABLE IF EXISTS Faction_Relations;
 DROP TABLE IF EXISTS SurvivorSkill;
+DROP TABLE IF EXISTS Survivor_Skill;
+
 DROP TABLE IF EXISTS DiseaseCase;
 DROP TABLE IF EXISTS Survivor;
 DROP TABLE IF EXISTS Encounter;
@@ -28,11 +30,11 @@ DROP TABLE IF EXISTS WaterSource;
 DROP TABLE IF EXISTS PowerSource;
 DROP TABLE IF EXISTS City;
 
--- City
+--[Tables]
 CREATE TABLE City (
     city_id INT IDENTITY(1,1) PRIMARY KEY,
     city_name NVARCHAR(100) NOT NULL,
-    state NVARCHAR(100)
+    state CHAR(2)
 );
 
 CREATE TABLE PowerSource (
@@ -173,7 +175,7 @@ CREATE TABLE Faction_Encounter (
     FOREIGN KEY (faction_id)   REFERENCES Faction(faction_id)
 );
 
-CREATE TABLE SurvivorSkill (
+CREATE TABLE Survivor_Skill (
     survivor_id INT NOT NULL,
     skill_id INT NOT NULL,
     proficiency_level INT,
