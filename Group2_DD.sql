@@ -14,7 +14,6 @@ DROP TABLE IF EXISTS Shelter_Water;
 DROP TABLE IF EXISTS Shelter_Power;
 DROP TABLE IF EXISTS Inventory;
 DROP TABLE IF EXISTS Faction_Relations;
-DROP TABLE IF EXISTS SurvivorSkill;
 DROP TABLE IF EXISTS Survivor_Skill;
 
 DROP TABLE IF EXISTS DiseaseCase;
