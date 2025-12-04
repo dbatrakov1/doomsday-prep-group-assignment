@@ -28,29 +28,6 @@ DROP TABLE IF EXISTS WaterSource;
 DROP TABLE IF EXISTS PowerSource;
 DROP TABLE IF EXISTS City;
 
---Drop junction tables first
-DROP TABLE IF EXISTS Faction_Encounter;
-DROP TABLE IF EXISTS Faction_Relations;
-DROP TABLE IF EXISTS Shelter_Power;
-DROP TABLE IF EXISTS Shelter_Water;
-DROP TABLE IF EXISTS Survivor_Encounter;
-DROP TABLE IF EXISTS Survivor_Skill;
-DROP TABLE IF EXISTS Inventory;
-
---Drop regular tables starting with least referenced
-DROP TABLE IF EXISTS PowerSource;
-DROP TABLE IF EXISTS WaterSource;
-DROP TABLE IF EXISTS DiseaseCase;
-DROP TABLE IF EXISTS ResourceSite;
-DROP TABLE IF EXISTS Encounter;
-DROP TABLE IF EXISTS Item;
-DROP TABLE IF EXISTS Faction;
-DROP TABLE IF EXISTS Skill;
-DROP TABLE IF EXISTS Survivor;
-DROP TABLE IF EXISTS Status;
-DROP TABLE IF EXISTS Shelter;
-DROP TABLE IF EXISTS City;
-
 -- City
 CREATE TABLE City (
     city_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -196,7 +173,7 @@ CREATE TABLE Faction_Encounter (
     FOREIGN KEY (faction_id)   REFERENCES Faction(faction_id)
 );
 
-CREATE TABLE Survivor_Skill (
+CREATE TABLE SurvivorSkill (
     survivor_id INT NOT NULL,
     skill_id INT NOT NULL,
     proficiency_level INT,
