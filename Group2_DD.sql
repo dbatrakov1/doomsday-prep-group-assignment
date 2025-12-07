@@ -28,7 +28,6 @@ DROP TABLE IF EXISTS Shelter;
 DROP TABLE IF EXISTS WaterSource;
 DROP TABLE IF EXISTS PowerSource;
 DROP TABLE IF EXISTS City;
-
 --[Tables]
 CREATE TABLE City (
     city_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -54,7 +53,7 @@ CREATE TABLE WaterSource (
 CREATE TABLE Shelter (
     shelter_id INT IDENTITY(1,1) PRIMARY KEY,
     city_id INT NOT NULL,
-    shelter_name NVARCHAR(100) NOT NULL,
+    shelter_name NVARCHAR(100) NOT NULL UNIQUE,
     capacity INT,
     FOREIGN KEY (city_id) REFERENCES City(city_id)
 );
@@ -77,7 +76,7 @@ CREATE TABLE Survivor (
 
 CREATE TABLE Skill (
     skill_id INT IDENTITY(1,1) PRIMARY KEY,
-    skill_name NVARCHAR(100) NOT NULL,
+    skill_name NVARCHAR(100) NOT NULL UNIQUE,
     skill_description NVARCHAR(500)
 );
 
@@ -91,7 +90,7 @@ CREATE TABLE DiseaseCase (
 
 CREATE TABLE Item (
     item_id INT IDENTITY(1,1) PRIMARY KEY,
-    item_name NVARCHAR(100) NOT NULL,
+    item_name NVARCHAR(100) NOT NULL UNIQUE,
     category NVARCHAR(100) NOT NULL,
     is_currency BIT NOT NULL DEFAULT 0,
     unit_value DECIMAL(10,2)
@@ -109,7 +108,7 @@ CREATE TABLE ResourceSite (
 
 CREATE TABLE Faction (
     faction_id INT IDENTITY(1,1) PRIMARY KEY,
-    faction_name NVARCHAR(100) NOT NULL,
+    faction_name NVARCHAR(100) NOT NULL UNIQUE,
     faction_type NVARCHAR(100) NOT NULL,
     faction_attitude NVARCHAR(100)
 );

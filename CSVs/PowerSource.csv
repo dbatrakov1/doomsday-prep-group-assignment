@@ -1,0 +1,11 @@
+power_source_id,power_source_name,power_source_description,is_active,transportable
+1,Hand Crank Generator,"Robust, yet simple. Crank the handle make some electricity.",FALSE,1
+2,Solar Array,"With a clear view of a southern sky, this bad boy could power a small house.",TRUE,0
+3,Diesel Generator,"Diesel goes in, electricity and smoke comes out.",FALSE,1
+4,Gas Generator,"Gas goes in, electricity comes out.",TRUE,1
+5,Weathervane Wind Turbine,Might make some power if the wind is blowing.,FALSE,0
+6,Treadmill Generator,"Burn calories, make electricity.",FALSE,1
+7,Seabrook Nuclear Plant,Largest electrical generating unit in all of New England.,TRUE,0
+8,MA Military Reservation Wind Project,Actually makes power if there's wind,TRUE,0
+9,Wood Generator,"If you can make steam, you can make power.",FALSE,1
+10,Dartmouth's Solar,"Just because the school is closed, doesn't mean it doesn't have a huge solar array.",FALSE,0
