@@ -1,0 +1,11 @@
+﻿water_source_id,water_source_name,water_source_description,water_source_quality
+1,Bluefish River,A marshy river,Prestine
+2,Town Brook,It used to provide drinking water for the pilgrims.,Prestine
+3,Eel River,A stream fed by a spring,Dirty
+4,Philip Spring,Feeds ponds in the Watuppa Reservation,Bad
+5,Mt. Blue Spring,"Famous in the region, near some decomissioned Naval depots",Toxic
+6,Halfway Pond,A large pond fed by springs,Good
+7,Chatham Well,A public well in the city,Dirty
+8,Springfield Well,A public well in the city,Dirty
+9,Provincetown Well,A public well in the city,Good
+10,Wareham Well,A public well in the city,Dirty
