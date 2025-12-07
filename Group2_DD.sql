@@ -9,6 +9,7 @@ USE Group2_DD;
 GO
 
 DROP TABLE IF EXISTS Survivor_Encounter;
+DROP TABLE IF EXISTS SurvivorSkill;
 DROP TABLE IF EXISTS Faction_Encounter;
 DROP TABLE IF EXISTS Shelter_Water;
 DROP TABLE IF EXISTS Shelter_Power;
