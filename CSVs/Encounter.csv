@@ -1,0 +1,31 @@
+﻿encounter_id,encounter_date,encounter_type,encounter_vibe,encounter_description
+1,7/26/2030,Negotation,Neutral,A meeting to resolve conflicts.
+2,8/4/2029,Ambush,Hostile,Sudden attack from hidden enemies.
+3,4/10/2028,Blockade,Hostile,A resource site was blocked by the other group.
+4,8/15/2027,Skirmish,Hostile,Small scale fight.
+5,3/6/2025,Blockade,Hostile,A resource site was blocked by the other group.
+6,5/30/2025,Run-in,Neutral,"Unexpected meeting, could be friendly or tense."
+7,12/25/2027,Negotation,Neutral,A meeting to resolve conflicts.
+8,3/23/2025,Skirmish,Hostile,Small scale fight.
+9,2/13/2030,Blockade,Hostile,A resource site was blocked by the other group.
+10,2/10/2028,Trade,Friendly,A trade was made.
+11,5/21/2029,Stand Off,Hostile,Tense standoff with potential for violence.
+12,10/14/2029,Trade,Friendly,A trade was made.
+13,10/3/2027,Run-in,Neutral,"Unexpected meeting, could be friendly or tense."
+14,12/14/2030,Blockade,Hostile,A resource site was blocked by the other group.
+15,12/17/2027,Ambush,Hostile,Sudden attack from hidden enemies.
+16,9/10/2028,Skirmish,Hostile,Small scale fight.
+17,5/10/2025,Negotation,Neutral,A meeting to resolve conflicts.
+18,5/31/2028,Run-in,Neutral,"Unexpected meeting, could be friendly or tense."
+19,2/16/2029,Blockade,Hostile,A resource site was blocked by the other group.
+20,4/19/2029,Trade,Friendly,A trade was made.
+21,5/16/2025,Ambush,Hostile,Sudden attack from hidden enemies.
+22,1/6/2025,Skirmish,Hostile,Small scale fight.
+23,11/16/2027,Skirmish,Hostile,Small scale fight.
+24,3/27/2027,Negotation,Neutral,A meeting to resolve conflicts.
+25,11/19/2026,Run-in,Neutral,"Unexpected meeting, could be friendly or tense."
+26,10/31/2027,Trade,Friendly,A trade was made.
+27,4/4/2028,Run-in,Neutral,"Unexpected meeting, could be friendly or tense."
+28,11/24/2025,Blockade,Hostile,A resource site was blocked by the other group.
+29,8/24/2029,Run-in,Neutral,"Unexpected meeting, could be friendly or tense."
+30,9/30/2028,Skirmish,Hostile,Small scale fight.
