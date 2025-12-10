@@ -4,6 +4,7 @@ DROP TRIGGER IF EXISTS trgStopWaterDeletion
 DROP TRIGGER IF EXISTS trgStopPowerDeletion
 DROP TRIGGER IF EXISTS trgCheckOngoingCases
 DROP TRIGGER IF EXISTS trgStopDeleteCurrency
+DROP TRIGGER IF EXISTS trgStopDeceasedSurvivorChanges
 DROP VIEW IF EXISTS shelterSkills
 DROP VIEW IF EXISTS shelterItems
 DROP VIEW IF EXISTS encounterRates
@@ -24,7 +25,7 @@ JOIN Survivor sv ON sv.shelter_id = s.shelter_id
 JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
 JOIN City c ON c.city_id = s.shelter_id
 GROUP BY c.city_name, s.shelter_name
-HAVING COUNT(*) > 20
+HAVING COUNT(*) > 1
 ORDER BY COUNT(*) DESC
 
 /*Look for survivors with high amounts of
@@ -33,9 +34,11 @@ SELECT sv.first_name + ' ' + sv.last_name AS full_name, COUNT(*) AS 'total_hosti
 FROM Survivor sv
 JOIN Survivor_Encounter se ON se.survivor_id = sv.survivor_id
 JOIN Encounter e ON e.encounter_id = se.encounter_id
-WHERE e.encounter_type = 'hostile'
+JOIN Faction_Encounter fe ON e.encounter_id =fe.encounter_id
+JOIN Faction f ON fe.faction_id = f.faction_id
+WHERE f.faction_attitude = 'hostile'
 GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 5
+HAVING COUNT(*) > 1
 ORDER BY COUNT(*) DESC
 
 /*Look for survivors who have gotten sick multiple
@@ -45,7 +48,7 @@ FROM Survivor sv
 JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
 WHERE sv.status_id = 1
 GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 2
+HAVING COUNT(*) > 1
 ORDER BY COUNT(*)
 
 -- TRIGGERS --
@@ -89,7 +92,25 @@ CREATE TRIGGER trgStopDeleteCurrency ON Item INSTEAD OF DELETE AS
 		BEGIN
 			DELETE FROM Item WHERE item_id=@item_id;
 		END
+GO
 
+/*Block deceased survivors from inserting, updating or deleting from survivor table 
+*/
+CREATE TRIGGER trgStopDeceasedSurvivorChanges ON Survivor
+	AFTER INSERT, UPDATE, DELETE
+	AS
+	DECLARE @user SYSNAME = SUSER_SNAME();
+	DECLARE @deceased INT = (SELECT TOP(1) status_id FROM Status WHERE status_name = 'Deceased'); --Get the deceased status id
+	IF EXISTS (
+		SELECT * 
+			FROM deleted
+			WHERE first_name + '_' + last_name = @user AND status_id = @deceased)
+	BEGIN
+		PRINT('Possible spy, deceased survivor trying to make changes to the table.');
+		ROLLBACK TRANSACTION;
+		RETURN;
+	END
+GO
 -- VIEWS --
 
 /*Check skills of survivors at each shelter,
@@ -126,7 +147,7 @@ GO
 
 /*Check for shelters above their capacity*/
 CREATE VIEW sheltersAboveCapacity (shelter_id, shelter_name, capacity, total_survivors) AS
-	SELECT s.shelter_id, s.shelter_name, s.capacity, COUNT(*)
+	SELECT s.shelter_id, s.shelter_name, s.capacity, COUNT(*) AS residents
 	FROM Shelter s
 	JOIN Survivor sv ON sv.shelter_id = s.shelter_id
 	GROUP BY s.shelter_id, s.shelter_name, s.capacity

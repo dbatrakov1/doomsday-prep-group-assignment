@@ -6,7 +6,7 @@ CREATE PROCEDURE sp_insert
     @TableName NVARCHAR(128)
 AS
 BEGIN
-    SET NOCOUNT ON;
+    --SET NOCOUNT ON;
     DECLARE @BasePath NVARCHAR(500) = 'C:\Users\bette\Desktop\School\Data\Group Work\doomsday-prep-group-assignment\CSVs\';  -- Set your folder path
     DECLARE @SQL NVARCHAR(MAX);
     SET @SQL = N'
@@ -28,6 +28,7 @@ EXEC sp_insert 'Shelter';
 EXEC sp_insert 'Survivor';
 EXEC sp_insert 'Skill';
 EXEC sp_insert 'Item';
+EXEC sp_insert 'Status';
 EXEC sp_insert 'ResourceSite';
 EXEC sp_insert 'Faction';
 EXEC sp_insert 'Encounter';
