@@ -22,9 +22,9 @@ SELECT s.shelter_name, c.city_name, COUNT(*) AS 'total_cases'
 FROM Shelter s
 JOIN Survivor sv ON sv.shelter_id = s.shelter_id
 JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
-JOIN City c ON c.city_id = s.shelter_id
+JOIN City c ON c.city_id = s.city_id
 GROUP BY c.city_name, s.shelter_name
-HAVING COUNT(*) > 20
+HAVING COUNT(*) > 2
 ORDER BY COUNT(*) DESC
 
 /*Look for survivors with high amounts of
@@ -33,9 +33,9 @@ SELECT sv.first_name + ' ' + sv.last_name AS full_name, COUNT(*) AS 'total_hosti
 FROM Survivor sv
 JOIN Survivor_Encounter se ON se.survivor_id = sv.survivor_id
 JOIN Encounter e ON e.encounter_id = se.encounter_id
-WHERE e.encounter_type = 'hostile'
+WHERE e.encounter_vibe = 'hostile'
 GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 5
+HAVING COUNT(*) > 1
 ORDER BY COUNT(*) DESC
 
 /*Look for survivors who have gotten sick multiple
@@ -45,7 +45,7 @@ FROM Survivor sv
 JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
 WHERE sv.status_id = 1
 GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 2
+HAVING COUNT(*) > 0
 ORDER BY COUNT(*)
 
 -- TRIGGERS --
@@ -96,14 +96,16 @@ CREATE TRIGGER trgStopDeleteCurrency ON Item INSTEAD OF DELETE AS
 including what is absent​*/
 GO
 CREATE VIEW shelterSkills (shelter_id, shelter_name, skill_name, survivors_with_skill) AS
-	SELECT s.shelter_id, s.shelter_name, sk.skill_name, COUNT(*)
+	SELECT s.shelter_id, s.shelter_name, sk.skill_name, COUNT(ss.survivor_id)
 	FROM Shelter s
-	FULL JOIN Survivor sv ON sv.shelter_id = s.shelter_id
-	FULL JOIN Survivor_Skill ss ON ss.survivor_id = sv.survivor_id
-	FULL JOIN Skill sk ON sk.skill_id = ss.skill_id
+	CROSS JOIN Skill sk
+	LEFT JOIN Survivor sv ON sv.shelter_id = s.shelter_id
+	LEFT JOIN Survivor_Skill ss ON ss.survivor_id = sv.survivor_id AND ss.skill_id = sk.skill_id
 	GROUP BY s.shelter_id, s.shelter_name, skill_name
 GO
 
+SELECT * FROM shelterSkills ORDER BY shelter_id, skill_name
+GO
 /*Get a count of the items in each shelters
 inventory (by item category)​*/
 CREATE VIEW shelterItems (shelter_id, shelter_name, item_category, total_items) AS
@@ -112,6 +114,9 @@ CREATE VIEW shelterItems (shelter_id, shelter_name, item_category, total_items) 
 	JOIN Inventory iv ON iv.shelter_id = s.shelter_id
 	JOIN Item i ON i.item_id = iv.item_id
 	GROUP BY s.shelter_id, s.shelter_name, i.category
+GO
+
+SELECT * FROM shelterItems ORDER BY shelter_id, item_category
 GO
 
 /*Look for high and low encounter rates in each
@@ -130,6 +135,10 @@ CREATE VIEW sheltersAboveCapacity (shelter_id, shelter_name, capacity, total_sur
 	FROM Shelter s
 	JOIN Survivor sv ON sv.shelter_id = s.shelter_id
 	GROUP BY s.shelter_id, s.shelter_name, s.capacity
+	HAVING COUNT(*) > capacity
+GO
+
+SELECT * FROM sheltersAboveCapacity 
 GO
 -- STORED PROCEDURES --
 
@@ -148,6 +157,9 @@ ELSE
 	END
 GO
 
+SELECT * FROM Item WHERE item_id = 1
+EXECUTE usp_updateItemValue @item_id = 1, @new_value = 3.99
+GO
 
 /*Safe delete procedures for both power and
 water sources (ensure they are not assigned a
@@ -207,3 +219,7 @@ IF (@maxQty IS NOT NULL)
 		SET @sql += 'AND category = ' + CONVERT(NVARCHAR, @itemCategory);
 	END
 SET @sql += ' GROUP BY s.shelter_id, s.shelter_name, i.category ORDER BY COUNT(*)'
+
+
+GO
+EXECUTE usp_ItemSearch
