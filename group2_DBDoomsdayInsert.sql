@@ -10,13 +10,13 @@ BEGIN
     DECLARE @BasePath NVARCHAR(500) = 'C:\Users\bette\Desktop\School\Data\Group Work\doomsday-prep-group-assignment\CSVs\';  -- Set your folder path
     DECLARE @SQL NVARCHAR(MAX);
     SET @SQL = N'
-    BULK INSERT ' + QUOTENAME(@TableName) + '
-    FROM ''' + @BasePath + @TableName + '.csv''
-    WITH (
-        FIELDTERMINATOR = '','',
-        ROWTERMINATOR = ''\n'',
-        FIRSTROW = 2
-    );';
+        BULK INSERT ' + QUOTENAME(@TableName) + '
+        FROM ''' + @BasePath + @TableName + '.csv''
+        WITH (
+            FIELDTERMINATOR = '','',
+            ROWTERMINATOR = ''\n'',
+            FIRSTROW = 2
+        );';
     EXEC sp_executesql @SQL;
 END;
 GO
