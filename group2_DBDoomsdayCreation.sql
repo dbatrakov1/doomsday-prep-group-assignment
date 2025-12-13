@@ -48,7 +48,7 @@ CREATE TABLE WaterSource (
     water_source_id INT IDENTITY(1,1) PRIMARY KEY,
     water_source_name NVARCHAR(100) NOT NULL,
     water_source_description NVARCHAR(500),
-    water_quality NVARCHAR(100) NOT NULL,
+    water_quality NVARCHAR(100) NOT NULL
 );
 
 CREATE TABLE Shelter (
@@ -182,3 +182,101 @@ CREATE TABLE Survivor_Skill (
     FOREIGN KEY (survivor_id) REFERENCES Survivor(survivor_id),
     FOREIGN KEY (skill_id)    REFERENCES Skill(skill_id)
 );
+GO
+---------------------------------------------------------
+-- CONSTRAINTS
+---------------------------------------------------------
+
+---------------------------------------------------------
+-- NON-NEGATIVE CONSTRAINTS
+---------------------------------------------------------
+
+-- Item unit_value
+ALTER TABLE Item
+ADD CONSTRAINT CK_Item_UnitValue_NonNegative
+    CHECK (unit_value >= 0);
+
+-- Inventory quantity
+ALTER TABLE Inventory
+ADD CONSTRAINT CK_Inventory_Quantity_NonNegative 
+	CHECK (quantity >= 0);
+
+-- Sherler capacity
+ALTER TABLE Shelter
+ADD CONSTRAINT CK_Shelter_Capacity_NonNegative 
+	CHECK (capacity >= 0);
+
+
+---------------------------------------------------------
+-- VALUE RANGE CONSTRAINTS
+---------------------------------------------------------
+
+-- Survivor_Skill proficiency_level
+ALTER TABLE Survivor_Skill
+ADD CONSTRAINT CK_SurvivorSkill_Proficiency_NonNegative
+    CHECK (proficiency_level BETWEEN 1 AND 3);
+
+
+---------------------------------------------------------
+-- STRING VALUE CONSTRAINTS
+---------------------------------------------------------
+
+-- Faction_Relations attitude
+ALTER TABLE Faction_Relations
+ADD CONSTRAINT CK_FactionRelations_Attitude_Allowed
+CHECK (attitude IS NULL OR attitude IN ('Hostile', 'Neutral', 'Friendly'));
+
+-- Faction faction_attitude
+ALTER TABLE Faction
+ADD CONSTRAINT CK_Faction_Attitude_Allowed
+CHECK (faction_attitude IS NULL OR faction_attitude IN ('Hostile', 'Neutral', 'Friendly'));
+
+-- Item category
+ALTER TABLE Item
+ADD CONSTRAINT CK_Item_Category_Allowed
+CHECK (category IN (
+    'Preserved Food',
+    'Perishable Food',
+    'Tool',
+    'Medical',
+    'Miscellaneous',
+    'Building Supply',
+    'Repair Supply'
+));
+
+-- Resource Site resource_type
+ALTER TABLE ResourceSite
+ADD CONSTRAINT CK_ResourceSite_ResourceType_Allowed
+CHECK (resource_type IN (
+    'Medical Salvage',
+    'Metal Salvage',
+    'Hunting Spot',
+    'Foraging Spot',
+    'Construction Salvage',
+    'Fishing Spot',
+    'Military Salvage'
+));
+
+-- Encounter encounter_type
+ALTER TABLE Encounter
+ADD CONSTRAINT CK_Encounter_Type_Allowed
+CHECK (encounter_type IN (
+	'Negotiation',
+    'Ambush',
+    'Blockade',
+    'Skirmish',
+    'Run-in',
+    'Trade',
+    'Stand Off')
+);
+
+-- Encounter encounter_vibe
+ALTER TABLE Encounter
+ADD CONSTRAINT CK_Encounter_Vibe_Allowed
+CHECK (encounter_vibe IN ('Hostile', 'Neutral', 'Friendly'));
+
+-- WaterSource water_quality
+ALTER TABLE WaterSource
+ADD CONSTRAINT CK_WaterSource_Quality_Allowed
+CHECK (water_quality IN ('Pristine', 'Good', 'Dirty', 'Bad', 'Toxic'));
+GO
