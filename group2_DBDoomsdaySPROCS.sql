@@ -2,10 +2,11 @@
 
 DROP PROCEDURE IF EXISTS usp_GetCityShelterSummary;
 DROP PROCEDURE IF EXISTS usp_GetSurvivorProfile;
-DROP PROCEDURE IF EXISTS usp_updateItemValue
-DROP PROCEDURE IF EXISTS usp_safePowerDelete
-DROP PROCEDURE IF EXISTS usp_safeWaterDelete
-DROP PROCEDURE IF EXISTS usp_ItemSearch
+DROP PROCEDURE IF EXISTS usp_updateItemValue;
+DROP PROCEDURE IF EXISTS usp_safePowerDelete;
+DROP PROCEDURE IF EXISTS usp_safeWaterDelete;
+DROP PROCEDURE IF EXISTS usp_ItemSearch;
+DROP PROCEDURE IF EXISTS usp_UpdateInventoryAtSurvivorShelter;
 
 
 /* =========================================
@@ -169,3 +170,25 @@ GO
 
 -- Demonstrate - Allows for getting a quick overview of a survivor
 EXECUTE usp_GetSurvivorProfile @SurvivorId = 21
+GO
+
+--Let Shelter Inventory Managers update inventory.
+CREATE PROCEDURE usp_UpdateInventoryAtSurvivorShelter
+	@ItemID INT,
+    @newQty INT
+	AS
+	BEGIN
+	DECLARE @user SYSNAME = SUSER_SNAME();
+	DECLARE @shelter INT = (SELECT TOP(1) shelter_id FROM Survivor WHERE first_name + '_' + last_name = @user); --Get the shelter id
+	IF EXISTS (SELECT * FROM Inventory WHERE item_id=@ItemID)
+	BEGIN
+		UPDATE Inventory SET quantity = @newqty WHERE item_id = @ItemID AND shelter_id = @shelter
+			PRINT('Item quantity updated')
+		END
+	ELSE
+		BEGIN
+			PRINT('Item not found')
+		END
+	END
+GO
+--Demonstrated at security level.

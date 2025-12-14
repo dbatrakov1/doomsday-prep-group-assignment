@@ -124,3 +124,22 @@ GO
 --Demostrate - We do not want new survivors sent to shelters that cannot handle them
 SELECT s.shelter_id FROM Shelter s WHERE s.capacity < (SELECT COUNT(*) FROM Survivor sv WHERE sv.shelter_id = s.shelter_id AND sv.status_id != 4)
 INSERT INTO Survivor (first_name, last_name, shelter_id, status_id) VALUES ('John', 'Doe', 1, 1)
+GO
+
+-- Prevent possible spies from using a dead survivor's credentials. 
+CREATE TRIGGER trgStopDeceasedSurvivorChanges ON Survivor
+	AFTER INSERT, UPDATE, DELETE
+	AS
+	DECLARE @user SYSNAME = SUSER_SNAME();
+	DECLARE @deceased INT = (SELECT TOP(1) status_id FROM Status WHERE status_name = 'Deceased'); --Get the deceased status id
+	IF EXISTS (
+		SELECT * 
+			FROM deleted
+			WHERE first_name + '_' + last_name = @user AND status_id = @deceased)
+	BEGIN
+		PRINT('Possible spy, deceased survivor trying to make changes to the table.');
+		ROLLBACK TRANSACTION;
+		RETURN;
+	END
+GO
+--Demonstrated in security portion
