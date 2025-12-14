@@ -1,7 +1,6 @@
 ﻿USE Group2_DD;
 
-DROP TRIGGER IF EXISTS trgStopWaterDeletion
-DROP TRIGGER IF EXISTS trgStopPowerDeletion
+DROP TRIGGER IF EXISTS trgResourceSiteDeletion
 DROP TRIGGER IF EXISTS trgCheckOngoingCases
 DROP TRIGGER IF EXISTS trgStopDeleteCurrency
 DROP VIEW IF EXISTS shelterSkills
@@ -22,9 +21,9 @@ SELECT s.shelter_name, c.city_name, COUNT(*) AS 'total_cases'
 FROM Shelter s
 JOIN Survivor sv ON sv.shelter_id = s.shelter_id
 JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
-JOIN City c ON c.city_id = s.shelter_id
+JOIN City c ON c.city_id = s.city_id
 GROUP BY c.city_name, s.shelter_name
-HAVING COUNT(*) > 20
+HAVING COUNT(*) > 2
 ORDER BY COUNT(*) DESC
 
 /*Look for survivors with high amounts of
@@ -33,9 +32,9 @@ SELECT sv.first_name + ' ' + sv.last_name AS full_name, COUNT(*) AS 'total_hosti
 FROM Survivor sv
 JOIN Survivor_Encounter se ON se.survivor_id = sv.survivor_id
 JOIN Encounter e ON e.encounter_id = se.encounter_id
-WHERE e.encounter_type = 'hostile'
+WHERE e.encounter_vibe = 'hostile'
 GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 5
+HAVING COUNT(*) > 1
 ORDER BY COUNT(*) DESC
 
 /*Look for survivors who have gotten sick multiple
@@ -45,7 +44,7 @@ FROM Survivor sv
 JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
 WHERE sv.status_id = 1
 GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 2
+HAVING COUNT(*) > 0
 ORDER BY COUNT(*)
 
 -- TRIGGERS --
@@ -53,12 +52,14 @@ ORDER BY COUNT(*)
 /*Stop resource sites from being deleted and tell
 the user to set the site to inactive​*/
 GO
-CREATE TRIGGER trgStopWaterDeletion ON Shelter_Water INSTEAD OF DELETE AS
-	PRINT('Do not remove shelter water sources! Instead set water source to inactive!');
+CREATE TRIGGER trgResourceSiteDeletion ON ResourceSite INSTEAD OF DELETE AS
+	DECLARE @resource_site_id  AS INT = (SELECT resource_site_id FROM deleted);
+	UPDATE ResourceSite SET is_operational = 0 WHERE resource_site_id = @resource_site_id; 
+	PRINT('Resource Site set to inactive')
 GO
-CREATE TRIGGER trgStopPowerDeletion ON Shelter_Power INSTEAD OF DELETE AS
-	PRINT('Do not remove shelter power sources! Instead set power source to inactive!');
-GO
+
+--Demostrate
+--DELETE FROM ResourceSite WHERE resource_site_id = 19
 
 /*When a disease case is added check that the
 survivor does not already an existing case (not
@@ -76,6 +77,9 @@ CREATE TRIGGER trgCheckOngoingCases ON DiseaseCase INSTEAD OF INSERT AS
 			INSERT INTO DiseaseCase (survivor_id, diagnosis_date, cure_date) VALUES (@survivor_id, @diagnosis_date, @cure_date);
 		END
 GO
+
+--Demostrate
+--INSERT INTO DiseaseCase (survivor_id, diagnosis_date, cure_date) VALUES (60, '2025-12-12', NULL)
 
 /*Do not allow items that are currency to be
 deleted*/
@@ -96,32 +100,38 @@ CREATE TRIGGER trgStopDeleteCurrency ON Item INSTEAD OF DELETE AS
 including what is absent​*/
 GO
 CREATE VIEW shelterSkills (shelter_id, shelter_name, skill_name, survivors_with_skill) AS
-	SELECT s.shelter_id, s.shelter_name, sk.skill_name, COUNT(*)
+	SELECT s.shelter_id, s.shelter_name, sk.skill_name, COUNT(ss.survivor_id)
 	FROM Shelter s
-	FULL JOIN Survivor sv ON sv.shelter_id = s.shelter_id
-	FULL JOIN Survivor_Skill ss ON ss.survivor_id = sv.survivor_id
-	FULL JOIN Skill sk ON sk.skill_id = ss.skill_id
+	CROSS JOIN Skill sk
+	LEFT JOIN Survivor sv ON sv.shelter_id = s.shelter_id
+	LEFT JOIN Survivor_Skill ss ON ss.survivor_id = sv.survivor_id AND ss.skill_id = sk.skill_id
 	GROUP BY s.shelter_id, s.shelter_name, skill_name
 GO
 
+SELECT * FROM shelterSkills ORDER BY shelter_id, survivors_with_skill DESC
+GO
 /*Get a count of the items in each shelters
 inventory (by item category)​*/
 CREATE VIEW shelterItems (shelter_id, shelter_name, item_category, total_items) AS
 	SELECT s.shelter_id, s.shelter_name, i.category, SUM(iv.quantity)
 	FROM Shelter s
-	JOIN Inventory iv ON iv.shelter_id = s.shelter_id
-	JOIN Item i ON i.item_id = iv.item_id
+	CROSS JOIN Item i
+	LEFT JOIN Inventory iv ON iv.shelter_id = s.shelter_id AND i.item_id = iv.item_id
 	GROUP BY s.shelter_id, s.shelter_name, i.category
+GO
+
+SELECT * FROM shelterItems ORDER BY shelter_id, total_items DESC
 GO
 
 /*Look for high and low encounter rates in each
 city​*/
-CREATE VIEW encounterRates (city_name, total_encounters) AS
+CREATE VIEW encounterRates (city_name, total_encounters_with_survivors_from_city) AS
 	SELECT c.city_name,
-		(SELECT DISTINCT COUNT(encounter_id) FROM Survivor_Encounter xse WHERE xse.survivor_id = sv.survivor_id)
+		(SELECT COUNT(DISTINCT xse.encounter_id) FROM Survivor_Encounter xse JOIN Survivor sv ON sv.survivor_id = xse.survivor_id JOIN Shelter s ON s.shelter_id = sv.shelter_id WHERE s.city_id = c.city_id)
 	FROM City c
-	JOIN Shelter s ON s.city_id = c.city_id
-	JOIN Survivor sv ON sv.shelter_id = s.shelter_id
+GO
+
+SELECT * FROM encounterRates ORDER BY total_encounters_with_survivors_from_city DESC
 GO
 
 /*Check for shelters above their capacity*/
@@ -130,6 +140,10 @@ CREATE VIEW sheltersAboveCapacity (shelter_id, shelter_name, capacity, total_sur
 	FROM Shelter s
 	JOIN Survivor sv ON sv.shelter_id = s.shelter_id
 	GROUP BY s.shelter_id, s.shelter_name, s.capacity
+	HAVING COUNT(*) > capacity
+GO
+
+SELECT * FROM sheltersAboveCapacity 
 GO
 -- STORED PROCEDURES --
 
@@ -148,6 +162,9 @@ ELSE
 	END
 GO
 
+SELECT * FROM Item WHERE item_id = 1
+EXECUTE usp_updateItemValue @item_id = 1, @new_value = 3.99
+GO
 
 /*Safe delete procedures for both power and
 water sources (ensure they are not assigned a
@@ -197,13 +214,26 @@ CREATE PROCEDURE usp_ItemSearch
 @itemCategory AS NVARCHAR(100) = NULL,
 @maxQty AS INT = NULL,
 @minQty AS INT = NULL AS
-DECLARE @sql AS NVARCHAR(MAX) = 'SELECT * FROM Shelter s FULL JOIN Inventory iv ON iv.shelter_id = s.shelter_id FULL JOIN Item i ON i.item_id = iv.item_id WHERE 1=1  '
+DECLARE @sql AS NVARCHAR(MAX) = 'SELECT s.shelter_id, s.shelter_name, i.category, SUM(iv.quantity) AS total_items
+	FROM Shelter s
+	CROSS JOIN Item i
+	LEFT JOIN Inventory iv ON iv.shelter_id = s.shelter_id AND i.item_id = iv.item_id WHERE 1 = 1 '
 IF (@itemCategory IS NOT NULL)
 	BEGIN
-		SET @sql += 'AND category = ' + @itemCategory;
+		SET @sql += ' AND i.category = ''' + @itemCategory + '''';
 	END
+
+SET @sql += ' GROUP BY s.shelter_id, s.shelter_name, i.category HAVING 1=1'
 IF (@maxQty IS NOT NULL)
 	BEGIN
-		SET @sql += 'AND category = ' + CONVERT(NVARCHAR, @itemCategory);
+		SET @sql += 'AND SUM(iv.quantity) <= ' + CONVERT(NVARCHAR, @maxQty);
 	END
-SET @sql += ' GROUP BY s.shelter_id, s.shelter_name, i.category ORDER BY COUNT(*)'
+IF (@minQty IS NOT NULL)
+	BEGIN
+		SET @sql += ' AND SUM(iv.quantity) >= ' + CONVERT(NVARCHAR, @minQty);
+	END
+EXECUTE sp_executesql @sql;
+
+
+GO
+EXECUTE usp_ItemSearch @itemCategory = 'Medical', @maxQty = 10, @minQty = 2
