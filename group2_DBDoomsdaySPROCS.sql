@@ -1,163 +1,23 @@
 ﻿USE Group2_DD;
 
-DROP TRIGGER IF EXISTS trgStopWaterDeletion
-DROP TRIGGER IF EXISTS trgStopPowerDeletion
-DROP TRIGGER IF EXISTS trgCheckOngoingCases
-DROP TRIGGER IF EXISTS trgStopDeleteCurrency
-DROP TRIGGER IF EXISTS trgStopDeceasedSurvivorChanges
-DROP VIEW IF EXISTS shelterSkills
-DROP VIEW IF EXISTS shelterItems
-DROP VIEW IF EXISTS encounterRates
-DROP VIEW IF EXISTS sheltersAboveCapacity
+DROP PROCEDURE IF EXISTS usp_GetCityShelterSummary;
+DROP PROCEDURE IF EXISTS usp_GetSurvivorProfile;
 DROP PROCEDURE IF EXISTS usp_updateItemValue
 DROP PROCEDURE IF EXISTS usp_safePowerDelete
 DROP PROCEDURE IF EXISTS usp_safeWaterDelete
 DROP PROCEDURE IF EXISTS usp_ItemSearch
 
 
--- QUERIES --
+/* =========================================
+   PROCEDURES
+   ========================================= */
 
-
-/*Check for shelters with a high amounts of cases ​*/
-SELECT s.shelter_name, c.city_name, COUNT(*) AS 'total_cases'
-FROM Shelter s
-JOIN Survivor sv ON sv.shelter_id = s.shelter_id
-JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
-JOIN City c ON c.city_id = s.shelter_id
-GROUP BY c.city_name, s.shelter_name
-HAVING COUNT(*) > 1
-ORDER BY COUNT(*) DESC
-
-/*Look for survivors with high amounts of
-dangerous encounters with hostile factions​*/
-SELECT sv.first_name + ' ' + sv.last_name AS full_name, COUNT(*) AS 'total_hostile_encounters'
-FROM Survivor sv
-JOIN Survivor_Encounter se ON se.survivor_id = sv.survivor_id
-JOIN Encounter e ON e.encounter_id = se.encounter_id
-JOIN Faction_Encounter fe ON e.encounter_id =fe.encounter_id
-JOIN Faction f ON fe.faction_id = f.faction_id
-WHERE f.faction_attitude = 'hostile'
-GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 1
-ORDER BY COUNT(*) DESC
-
-/*Look for survivors who have gotten sick multiple
-times and survived*/
-SELECT sv.first_name + ' ' + sv.last_name AS full_name, COUNT(*) AS 'total_times_infected'
-FROM Survivor sv
-JOIN DiseaseCase dc ON dc.survivor_id = sv.survivor_id
-WHERE sv.status_id = 1
-GROUP BY sv.first_name, sv.last_name
-HAVING COUNT(*) > 1
-ORDER BY COUNT(*)
-
--- TRIGGERS --
-
-/*Stop resource sites from being deleted and tell
-the user to set the site to inactive​*/
+/*Updates an item’s value​*/
 GO
-CREATE TRIGGER trgStopWaterDeletion ON Shelter_Water INSTEAD OF DELETE AS
-	PRINT('Do not remove shelter water sources! Instead set water source to inactive!');
-GO
-CREATE TRIGGER trgStopPowerDeletion ON Shelter_Power INSTEAD OF DELETE AS
-	PRINT('Do not remove shelter power sources! Instead set power source to inactive!');
-GO
-
-/*When a disease case is added check that the
-survivor does not already an existing case (not
-cured)​*/
-CREATE TRIGGER trgCheckOngoingCases ON DiseaseCase INSTEAD OF INSERT AS
-	DECLARE @survivor_id AS INT = (SELECT survivor_id FROM inserted);
-	DECLARE @diagnosis_date AS DATE = (SELECT diagnosis_date FROM inserted);
-	DECLARE @cure_date AS DATE = (SELECT cure_date FROM inserted);
-	IF EXISTS (SELECT * FROM DiseaseCase dc WHERE dc.survivor_id = @survivor_id AND dc.cure_date IS NULL)
-		BEGIN
-			PRINT('This survivor already has an ongoing disease case!')
-		END
-	ELSE
-		BEGIN
-			INSERT INTO DiseaseCase (survivor_id, diagnosis_date, cure_date) VALUES (@survivor_id, @diagnosis_date, @cure_date);
-		END
-GO
-
-/*Do not allow items that are currency to be
-deleted*/
-CREATE TRIGGER trgStopDeleteCurrency ON Item INSTEAD OF DELETE AS
-	DECLARE @item_id AS INT = (SELECT item_id FROM inserted);
-	IF EXISTS (SELECT * FROM Item WHERE item_id=@item_id AND is_currency = 1)
-		BEGIN
-			PRINT('This item is a currency and should not be deleted!');
-		END
-	ELSE
-		BEGIN
-			DELETE FROM Item WHERE item_id=@item_id;
-		END
-GO
-
-/*Block deceased survivors from inserting, updating or deleting from survivor table 
-*/
-CREATE TRIGGER trgStopDeceasedSurvivorChanges ON Survivor
-	AFTER INSERT, UPDATE, DELETE
-	AS
-	DECLARE @user SYSNAME = SUSER_SNAME();
-	DECLARE @deceased INT = (SELECT TOP(1) status_id FROM Status WHERE status_name = 'Deceased'); --Get the deceased status id
-	IF EXISTS (
-		SELECT * 
-			FROM deleted
-			WHERE first_name + '_' + last_name = @user AND status_id = @deceased)
-	BEGIN
-		PRINT('Possible spy, deceased survivor trying to make changes to the table.');
-		ROLLBACK TRANSACTION;
-		RETURN;
-	END
-GO
--- VIEWS --
-
-/*Check skills of survivors at each shelter,
-including what is absent​*/
-GO
-CREATE VIEW shelterSkills (shelter_id, shelter_name, skill_name, survivors_with_skill) AS
-	SELECT s.shelter_id, s.shelter_name, sk.skill_name, COUNT(*)
-	FROM Shelter s
-	FULL JOIN Survivor sv ON sv.shelter_id = s.shelter_id
-	FULL JOIN Survivor_Skill ss ON ss.survivor_id = sv.survivor_id
-	FULL JOIN Skill sk ON sk.skill_id = ss.skill_id
-	GROUP BY s.shelter_id, s.shelter_name, skill_name
-GO
-
-/*Get a count of the items in each shelters
-inventory (by item category)​*/
-CREATE VIEW shelterItems (shelter_id, shelter_name, item_category, total_items) AS
-	SELECT s.shelter_id, s.shelter_name, i.category, SUM(iv.quantity)
-	FROM Shelter s
-	JOIN Inventory iv ON iv.shelter_id = s.shelter_id
-	JOIN Item i ON i.item_id = iv.item_id
-	GROUP BY s.shelter_id, s.shelter_name, i.category
-GO
-
-/*Look for high and low encounter rates in each
-city​*/
-CREATE VIEW encounterRates (city_name, total_encounters) AS
-	SELECT c.city_name,
-		(SELECT DISTINCT COUNT(encounter_id) FROM Survivor_Encounter xse WHERE xse.survivor_id = sv.survivor_id)
-	FROM City c
-	JOIN Shelter s ON s.city_id = c.city_id
-	JOIN Survivor sv ON sv.shelter_id = s.shelter_id
-GO
-
-/*Check for shelters above their capacity*/
-CREATE VIEW sheltersAboveCapacity (shelter_id, shelter_name, capacity, total_survivors) AS
-	SELECT s.shelter_id, s.shelter_name, s.capacity, COUNT(*) AS residents
-	FROM Shelter s
-	JOIN Survivor sv ON sv.shelter_id = s.shelter_id
-	GROUP BY s.shelter_id, s.shelter_name, s.capacity
-GO
--- STORED PROCEDURES --
-
-/*Updated a items value​*/
 CREATE PROCEDURE usp_updateItemValue
-@item_id AS INT,
-@new_value AS DECIMAL(10,2) AS
+@item_id INT,
+@new_value DECIMAL(10,2)
+AS
 IF EXISTS (SELECT * FROM Item WHERE item_id=@item_id)
 	BEGIN
 		UPDATE Item SET unit_value = @new_value WHERE item_id = @item_id
@@ -169,17 +29,24 @@ ELSE
 	END
 GO
 
+-- Demonstrate - Allows for easy updating of item values 
+SELECT * FROM Item WHERE item_id = 1
+EXECUTE usp_updateItemValue @item_id = 1, @new_value = 2.99
+GO
 
 /*Safe delete procedures for both power and
 water sources (ensure they are not assigned a
 shelter)​*/
 CREATE PROCEDURE usp_safePowerDelete
-@power_source_id AS INT AS
-IF EXISTS (SELECT * FROM Shelter_Power WHERE power_source_id = @power_source_id)
+@power_source_id INT
+AS
+BEGIN
+IF EXISTS (SELECT * FROM PowerSource WHERE power_source_id = @power_source_id)
 	BEGIN
 		IF EXISTS (SELECT * FROM Shelter_Power WHERE power_source_id=@power_source_id)
 			BEGIN
-				PRINT('Power source is currently assigned a shelter and cannot be deleted')
+				UPDATE PowerSource SET is_active = 0 WHERE power_source_id = @power_source_id;
+				PRINT('Power source is currently assigned a shelter so was set to inactive instead of being deleted');
 			END
 		ELSE
 			BEGIN
@@ -190,41 +57,115 @@ ELSE
 	BEGIN
 		PRINT('Power source not found')
 	END
+END
 GO
 
-CREATE PROCEDURE usp_safeWaterDelete
-@water_source_id AS INT AS
-IF EXISTS (SELECT * FROM Shelter_Water WHERE water_source_id = @water_source_id)
-	BEGIN
-		IF EXISTS (SELECT * FROM Shelter_Water WHERE water_source_id=@water_source_id)
-			BEGIN
-				PRINT('Water source is currently assigned a shelter and cannot be deleted')
-			END
-		ELSE
-			BEGIN
-				DELETE FROM Shelter_Water WHERE water_source_id = @water_source_id
-			END
-	END
-ELSE
-	BEGIN
-		PRINT('Water source not found')
-	END
+-- Demonstrate - Does not allow water/power sources in use to be deleted, is used in case the constraint fails
+SELECT ps.power_source_id FROM PowerSource ps WHERE ps.power_source_id IN (SELECT sp.power_source_id FROM Shelter_Power sp)
+EXECUTE usp_safePowerDelete @power_source_id = 1
+SELECT * FROM PowerSource WHERE power_source_id = 1
 GO
 
 /*Dynamic query to look for quantities of an item
 type in shelters (with max/min filters)*/
 
 CREATE PROCEDURE usp_ItemSearch
-@itemCategory AS NVARCHAR(100) = NULL,
-@maxQty AS INT = NULL,
-@minQty AS INT = NULL AS
-DECLARE @sql AS NVARCHAR(MAX) = 'SELECT * FROM Shelter s FULL JOIN Inventory iv ON iv.shelter_id = s.shelter_id FULL JOIN Item i ON i.item_id = iv.item_id WHERE 1=1  '
+@itemCategory NVARCHAR(100) = NULL,
+@maxQty INT = NULL,
+@minQty INT = NULL
+AS
+BEGIN
+DECLARE @sql AS NVARCHAR(MAX) = 'SELECT s.shelter_id, s.shelter_name, i.category, SUM(iv.quantity) AS total_items
+	FROM Shelter s
+	CROSS JOIN Item i
+	LEFT JOIN Inventory iv ON iv.shelter_id = s.shelter_id AND i.item_id = iv.item_id WHERE 1 = 1 '
 IF (@itemCategory IS NOT NULL)
 	BEGIN
-		SET @sql += 'AND category = ' + @itemCategory;
+		SET @sql += ' AND i.category = ''' + @itemCategory + '''';
 	END
+
+SET @sql += ' GROUP BY s.shelter_id, s.shelter_name, i.category HAVING 1=1'
 IF (@maxQty IS NOT NULL)
 	BEGIN
-		SET @sql += 'AND category = ' + CONVERT(NVARCHAR, @itemCategory);
+		SET @sql += ' AND SUM(iv.quantity) <= ' + CONVERT(NVARCHAR, @maxQty);
 	END
-SET @sql += ' GROUP BY s.shelter_id, s.shelter_name, i.category ORDER BY COUNT(*)'
+IF (@minQty IS NOT NULL)
+	BEGIN
+		SET @sql += ' AND SUM(iv.quantity) >= ' + CONVERT(NVARCHAR, @minQty);
+	END
+EXECUTE sp_executesql @sql;
+END
+
+
+GO
+-- Demonstrate - Allows for easy checks of item quantities at shelters
+EXECUTE usp_ItemSearch @itemCategory = 'Medical', @maxQty = 10, @minQty = 2
+
+GO
+
+-- Get capacity, open beds, and infected counts for shelters in a city
+CREATE PROCEDURE usp_GetCityShelterSummary
+    @CityName NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @InfectedStatusId INT;
+    SELECT @InfectedStatusId = status_id
+    FROM Status
+    WHERE status_name = 'Infected';
+
+    SELECT 
+        s.shelter_id,
+        s.shelter_name,
+        s.capacity,
+        COUNT(sv.survivor_id) AS total_survivors,
+        s.capacity - COUNT(sv.survivor_id) AS open_beds,
+        SUM(CASE WHEN sv.status_id = @InfectedStatusId THEN 1 ELSE 0 END) AS infected_survivors
+    FROM City c
+    JOIN Shelter s       ON s.city_id      = c.city_id
+    LEFT JOIN Survivor sv ON sv.shelter_id = s.shelter_id
+    WHERE c.city_name = @CityName
+    GROUP BY s.shelter_id, s.shelter_name, s.capacity
+    ORDER BY s.shelter_name;
+END;
+GO
+
+-- Demonstrate - Allows for easy checks on all shelters capacity/infected summary in a city
+EXECUTE usp_GetCityShelterSummary @cityName = 'Sandwich'
+GO
+
+-- Get a single survivor's overall profile: status, disease cases, encounters
+CREATE PROCEDURE usp_GetSurvivorProfile
+    @SurvivorId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        sv.survivor_id,
+        sv.first_name,
+        sv.last_name,
+        sv.birth_date,
+        st.status_name,
+        COUNT(DISTINCT dc.disease_case_id) AS total_disease_cases,
+        SUM(CASE WHEN dc.cure_date IS NULL THEN 1 ELSE 0 END) AS open_disease_cases,
+        COUNT(DISTINCT se.encounter_id) AS total_encounters,
+        SUM(CASE WHEN e.encounter_vibe = 'Hostile' THEN 1 ELSE 0 END) AS hostile_encounters
+    FROM Survivor sv
+    JOIN Status st          ON st.status_id       = sv.status_id
+    LEFT JOIN DiseaseCase dc ON dc.survivor_id    = sv.survivor_id
+    LEFT JOIN Survivor_Encounter se ON se.survivor_id = sv.survivor_id
+    LEFT JOIN Encounter e          ON e.encounter_id  = se.encounter_id
+    WHERE sv.survivor_id = @SurvivorId
+    GROUP BY 
+        sv.survivor_id,
+        sv.first_name,
+        sv.last_name,
+        sv.birth_date,
+        st.status_name;
+END;
+GO
+
+-- Demonstrate - Allows for getting a quick overview of a survivor
+EXECUTE usp_GetSurvivorProfile @SurvivorId = 21
