@@ -1,18 +1,5 @@
 ﻿USE Group2_DD;
 
-DROP TRIGGER IF EXISTS trgResourceSiteDeletion
-DROP TRIGGER IF EXISTS trgCheckOngoingCases
-DROP TRIGGER IF EXISTS trgStopDeleteCurrency
-DROP VIEW IF EXISTS shelterSkills
-DROP VIEW IF EXISTS shelterItems
-DROP VIEW IF EXISTS encounterRates
-DROP VIEW IF EXISTS sheltersAboveCapacity
-DROP PROCEDURE IF EXISTS usp_updateItemValue
-DROP PROCEDURE IF EXISTS usp_safePowerDelete
-DROP PROCEDURE IF EXISTS usp_safeWaterDelete
-DROP PROCEDURE IF EXISTS usp_ItemSearch
-
-
 /* =========================================
    QUERIES
    ========================================= */
