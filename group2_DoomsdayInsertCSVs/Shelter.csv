@@ -1,0 +1,13 @@
+﻿shelter_id,city_id,shelter_name,capacity
+1,2,Watertown Homestead,6
+2,2,Watertown Shelter,12
+3,7,Wareham Bunker,12
+4,2,Watertown Bed & Breakfast,14
+5,5,Sandwich Estate,6
+6,4,Worcester Farm,8
+7,4,Worcester Refuge,6
+8,5,Sandwich Cabin,4
+9,4,Worcester Depot,8
+10,2,Watertown Redoubt,13
+11,6,Provincetown Asylum,8
+12,7,Wareham Safehouse,9

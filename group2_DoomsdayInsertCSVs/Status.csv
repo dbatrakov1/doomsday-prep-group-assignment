@@ -1,0 +1,6 @@
+﻿status_id,status_name
+1,Alive
+2,Missing
+3,Infected
+4,Deceased
+5,Injured

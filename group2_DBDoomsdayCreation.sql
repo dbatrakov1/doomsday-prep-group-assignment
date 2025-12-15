@@ -1,10 +1,10 @@
 --[TABLE Creation Statements Here]
-/*USE master
+USE master
 
 DROP DATABASE IF EXISTS Group2_DD;
 GO
 CREATE DATABASE Group2_DD;
-GO*/
+GO
 USE Group2_DD;
 GO
 
